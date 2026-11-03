@@ -69,6 +69,12 @@ wsl --list --online</code></pre></div><p data-t="m1note">Restart Windows if prom
 wsl --list --verbose</code></pre></div><p data-t="m2note">On WSL builds that do not recognize --location, stop and update WSL; don't fall back to a default C: installation. Create the Linux user when prompted.</p></div>
 <div class="step"><div class="step-title"><span class="num">03</span><h3 data-t="m3">Install basic Linux tools</h3></div><div class="codewrap"><div class="codebar"><span>Ubuntu · bash</span><button class="copy" data-copy>Copy</button></div><pre><code>sudo apt update
 sudo apt install -y git python3 python3-venv tmux curl ca-certificates build-essential gh
+# Install Node.js 24 using the maintained NVM project first:
+# https://github.com/nvm-sh/nvm#installing-and-updating
+# In a new Ubuntu shell, after NVM is installed:
+nvm install 24
+nvm use 24
+npm install -g pnpm@11.7.0
 node -v
 pnpm -v
 git --version
