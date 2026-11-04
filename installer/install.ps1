@@ -21,8 +21,19 @@ if($v.SizeRemaining -lt 20GB){StopSafe 'Need at least 20 GiB available.'}
 if(-not (Get-Command wsl.exe -ErrorAction SilentlyContinue)){StopSafe 'WSL missing. Install separately as Administrator and rerun.'}
 & wsl.exe --version | Out-Host
 if($LASTEXITCODE -ne 0){StopSafe 'WSL not initialized: run wsl --install --no-distribution as admin, handle reboot manually, then rerun.'}
-$distros=(& wsl.exe --list --quiet | Out-String)
-$exists= $distros -match [regex]::Escape($Distribution)
+$distros=((& wsl.exe --list --quiet | Out-String) -replace [char]0,'')
+$names=@($distros -split '[\r\n]+' | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+$exists=($names -contains $Distribution)
+if($exists){
+  $regRoot='HKCU:\Software\Microsoft\Windows\CurrentVersion\Lxss'
+  $entries=@(Get-ChildItem $regRoot -ErrorAction SilentlyContinue | ForEach-Object { Get-ItemProperty $_.PSPath } | Where-Object { $_.DistributionName -eq $Distribution })
+  if($entries.Count -ne 1){StopSafe 'Cannot verify exact WSL distribution registry location; refusing to modify existing distro.'}
+  $registered=([string]$entries[0].BasePath -replace '^\\\\\?\\','').TrimEnd('\')
+  $expected=[IO.Path]::GetFullPath($ubuntu).TrimEnd('\')
+  if(-not [string]::Equals($registered,$expected,[StringComparison]::OrdinalIgnoreCase)){
+    StopSafe ('Registered distro location '+$registered+' differs from requested '+$expected)
+  }
+}
 if($exists){
  if(-not (Test-Path (Join-Path $ubuntu 'ext4.vhdx'))){StopSafe 'Distribution exists elsewhere. Refusing to overwrite.'}
  Write-Host 'Existing Ubuntu VHD verified at selected path.'
