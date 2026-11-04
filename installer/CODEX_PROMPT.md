@@ -25,6 +25,7 @@ OPERATING CONTRACT
 - Keep the Executor paused. A blank model provider or repository is an expected setup checkpoint, not a reason to change defaults to paid providers.
 
 IMPLEMENT AUTOMATICALLY, WITH CHECKPOINTS AND RESUME
+First inspect the optional TunnelLab scripts at https://github.com/pouramin/dshsuperagent/tree/main/installer and prefer reusing the reviewed install.ps1 and setup-linux.sh stages if they fit the verified machine. Do not run a downloaded script before inspecting its contents and checking that its target drive and distro match the operator approval. If a script does not fit the machine or fails, stop or adapt only within the approved scope and report differences. Do not improvise destructive fallback steps.
 A. WSL: verify version supports '--location'. If Windows components absent, obtain separate admin approval and install only WSL components with 'wsl --install --no-distribution'. Verify no Windows restart is initiated. If it is required, stop and resume after user restarts manually.
 B. Ubuntu: only on the confirmed SSD, using 'wsl --install -d Ubuntu-24.04 --location <drive:\folder\Ubuntu> --no-launch'. Verify ext4.vhdx real path and distro registration. Do not reuse any previously registered Ubuntu located elsewhere.
 C. Linux: create dsh-agent with private home, lock password if using WSL root management, omit sudo group. Configure /etc/wsl.conf to disable automount, interop and appendWindowsPath; preserve unrelated settings. Restart ONLY the Ubuntu distro, confirm protections.
