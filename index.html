@@ -79,11 +79,17 @@ dsh --version</code></pre></div><p data-t="m4note">The version is pinned by the 
 cd ~/src
 git clone https://github.com/deepseek-ai/dsh-superagent-prototype.git dsh-superagent
 cd dsh-superagent
-pnpm install
+git checkout 8c32a9dc5d72c033816c6a8110b37f40cf94fba4
+pnpm install --frozen-lockfile
+pnpm typecheck
 pnpm build
+export DSH_HOME="$HOME/.local/share/dsh"
+mkdir -p "$DSH_HOME"
+# Only for a NEW profile — stop if superagent already exists:
+test ! -e "$DSH_HOME/profiles/superagent" || { echo "Profile already exists"; exit 1; }
 dsh superagent --from-default-profile web --dump-config > /dev/null
 dsh plugin --profile superagent add "link:$PWD"</code></pre></div><p data-t="m5note">Run profile creation ONLY once on a new installation. On an existing profile, the creation command can overwrite settings; use the official Upgrade guide instead.</p></div>
-<div class="step"><div class="step-title"><span class="num">06</span><h3 data-t="m6">Configure the machine profile</h3></div><p data-t="m6note">Copy examples/profile.cordis.patch.yml to the dedicated Harness profile's cordis.patch.yml. Replace every placeholder, set a unique absolute stateDir, enable the webserver port 3082, and supply the dedicated GitHub CLI wrapper. See upstream Deployment for the exact schema.</p><a class="ref" href="https://github.com/deepseek-ai/dsh-superagent-prototype/blob/main/examples/profile.cordis.patch.yml" target="_blank" rel="noopener">Official profile example ↗</a></div>
+<div class="step"><div class="step-title"><span class="num">06</span><h3 data-t="m6">Configure the machine profile</h3></div><p data-t="m6note">Copy examples/profile.cordis.patch.yml to $DSH_HOME/profiles/superagent/cordis.patch.yml. Replace the stateDir placeholder with an absolute path (for example $DSH_HOME/state/superagent); use localhost port 3082. Set the dedicated GitHub CLI later in Settings → Sources, not in this YAML. Preserve existing configurations; do not overwrite a previously configured profile.</p><a class="ref" href="https://github.com/deepseek-ai/dsh-superagent-prototype/blob/main/examples/profile.cordis.patch.yml" target="_blank" rel="noopener">Official profile example ↗</a></div>
 <div class="step"><div class="step-title"><span class="num">07</span><h3 data-t="m7">Configure a separate GitHub bot identity</h3></div><div class="codewrap"><div class="codebar"><span>Ubuntu · bash</span><button class="copy" data-copy>Copy</button></div><pre><code>mkdir -p ~/.local/bin
 cat > ~/.local/bin/gh-agent <<'EOF'
 #!/bin/sh
@@ -93,7 +99,7 @@ chmod +x ~/.local/bin/gh-agent
 gh-agent auth login
 gh-agent api user --jq .login</code></pre></div><p data-t="m7note">Create the dedicated GitHub user and accept the test repository invitation manually. Only sign in as the bot for gh-agent. Don't reuse your main GitHub CLI credentials.</p></div>
 <div class="step"><div class="step-title"><span class="num">08</span><h3 data-t="m8">Start and configure Super Agent</h3></div><div class="codewrap"><div class="codebar"><span>Ubuntu · inside ~/src/dsh-superagent</span><button class="copy" data-copy>Copy</button></div><pre><code>scripts/dsh-superagent start
-scripts/dsh-superagent status</code></pre></div><p data-t="m8note">Open the panel URL shown in the start output; select Superagent in the sidebar. Set Sources, Policy, Execution and Prompts in that order. If status reports setup pending, finish the missing settings rather than restarting repeatedly.</p></div>
+scripts/dsh-superagent status</code></pre></div><p data-t="m8note">Open the panel URL shown in the start output; select Superagent in the sidebar. Set Sources, Policy, Execution and Prompts in that order. If status reports setup pending (exit 3), finish the missing settings rather than restarting repeatedly. If Node 24 reports MainThread and the process-detection script times out, verify the real process identity before any reviewed fix.</p></div>
 <div class="step"><div class="step-title"><span class="num">09</span><h3 data-t="m9">Prepare a separate test checkout and a safe first test</h3></div><p data-t="m9note">Initialize a disposable GitHub repository with README, invite a dedicated GitHub bot, clone with that bot's isolated gh-agent identity, and configure Settings → Execution → Prepare command from upstream Deployment. Set Eval and Execution to the working model (for example openrouter/free), select the same model in Open main Session, pause Executor and leave auto-merge off. Receive-mode Observe does not prevent explicitly addressed requests from becoming tickets; confirm safeguards before retrying.</p><div class="warning" data-t="compatNote">Node 24.22.2 may report its process name as MainThread. If upstream start times out despite an active 3082 listener, check the script's node/dsh process-name detection. Review a minimal local compatibility patch rather than starting a duplicate or replacing dependencies. A startup-generated token URL must be opened privately with cookies retained.</div></div>
 </div></div>
 </div></div></section>
@@ -136,9 +142,9 @@ m2:"نصب Ubuntu روی SSD",m2note:"اگر نسخه WSL گزینه --location 
 m3:"نصب ابزارهای پایه لینوکس",m3note:"دستورهای آخر برای بررسی نسخه‌ها هستن. Node.js نسخه 22.19+ یا 24+ و pnpm رو طبق راهنمای رسمی لینوکس نصب کن، نه نسخه قدیمی مخزن Ubuntu. Git باید 2.32+ و gh نسخه 2.48+ باشه.",
 m4:"نصب نسخه سازگار Harness",m4note:"این نسخه طبق راهنمای رسمی Super Agent مشخص شده. قبل از آپگرید، سازگاری رو بررسی کن.",
 m5:"ساخت پروژه و پروفایل اختصاصی",m5note:"دستور ساخت پروفایل رو فقط یک‌بار در نصب تازه اجرا کن. اجرای دوباره روی پروفایل موجود ممکنه تنظیمات رو پاک کنه.",
-m6:"تنظیم پروفایل سرویس",m6note:"فایل examples/profile.cordis.patch.yml رو به cordis.patch.yml در پروفایل اختصاصی کپی کن. همه Placeholderها رو جایگزین کن، stateDir مطلق بده و پورت 3082 و مسیر GitHub CLI اختصاصی رو تنظیم کن. ساختار دقیق در Deployment رسمی هست.",
+m6:"تنظیم پروفایل سرویس",m6note:"فایل examples/profile.cordis.patch.yml رو داخل $DSH_HOME/profiles/superagent/cordis.patch.yml کپی کن و stateDir رو با مسیر مطلق جایگزین کن. پورت 3082 فقط روی localhost باشه. مسیر gh-agent رو بعداً در Settings → Sources وارد کن، نه توی YAML. پروفایل قبلی رو بازنویسی نکن.",
 m7:"اکانت GitHub اختصاصی ایجنت",m7note:"حساب GitHub جدا بساز و دعوت ریپوی تست رو دستی قبول کن. فقط حساب بات رو داخل gh-agent لاگین کن؛ از اطلاعات حساب اصلی استفاده نکن.",
-m8:"اجرای Super Agent و تنظیمات پنل",m8note:"آدرس پنل رو از خروجی Start بردار و بخش Superagent رو باز کن. Sources، Policy، Execution و Prompts رو تنظیم کن. اگر Status مشکل Setup گزارش داد، تنظیمات ناقص رو تکمیل کن.",
+m8:"اجرای Super Agent و تنظیمات پنل",m8note:"آدرس پنل رو از خروجی Start بردار و بخش Superagent رو باز کن. Sources، Policy، Execution و Prompts رو تنظیم کن. اگر Status حالت Setup pending (کد 3) گزارش داد، تنظیمات ناقص رو تکمیل کن. اگر Node 24 با اسم MainThread شناخته شد و Start اشتباهاً زمان‌انتظار داد، قبل از هر اصلاح هویت پردازش رو بررسی کن.",
 modelTitle:"اتصال OpenRouter",modelLead:"Harness از Custom model API سازگار با OpenAI Chat Completions پشتیبانی می‌کنه. مدل‌های رایگان ممکنه کار کنن، ولی کیفیت Tool Calling و پایداری متفاوته؛ باید آزمایش بشن.",
 modelTip:"روی Fetch available models بزن، پشتیبانی Tool Calling رو چک کن و یک تسک کوچک امتحان کن. پلن رایگان به معنی درخواست نامحدود نیست.",
 costTitle:"هزینه‌ها و محدودیت‌ها",costText:"کد پروژه با لایسنس MIT منتشر شده. مدل رایگان ممکنه تا سقف محدودیت‌های ارائه‌دهنده، هزینه توکن $0 داشته باشه؛ اما سرور، مدل پولی، دانلودها و درخواست‌های تکراری می‌تونن هزینه داشته باشن.",
