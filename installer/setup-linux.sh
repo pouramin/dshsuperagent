@@ -86,6 +86,19 @@ PY
  else
    echo 'Existing Super Agent profile preserved; no overwrite.'
  fi
+ # Persist Node/Harness/gh and DSH_HOME for future interactive logins.
+ mkdir -p "$home/.config"
+ cat > "$home/.config/tunnellab-env.sh" <<'EOF'
+export PATH="$HOME/.local/node-v24.22.2/bin:$HOME/.local/bin:$PATH"
+export DSH_HOME="$HOME/.local/share/dsh"
+EOF
+ for f in "$home/.profile" "$home/.bashrc"; do
+   touch "$f"
+   if ! grep -Fq 'tunnellab-env.sh' "$f"; then
+     printf '\n# TunnelLab Harness profile\n[ -f "$HOME/.config/tunnellab-env.sh" ] && . "$HOME/.config/tunnellab-env.sh"\n' >> "$f"
+   fi
+ done
+ echo 'Persistent tool PATH and DSH_HOME configured.'
  echo 'Verified tools:'
  node -v; pnpm -v; dsh --version; git --version; tmux -V; python3 --version
  "$home/.local/bin/gh" --version | head -1
