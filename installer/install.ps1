@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
  [ValidatePattern('^[A-Za-z]$')][string]$DriveLetter='D',
- [ValidatePattern('^[A-Za-z0-9][A-Za-z0-9_-]*(\\[A-Za-z0-9][A-Za-z0-9_-]*)*[string]$Folder='dsh-superagent',
+ [ValidatePattern('^[A-Za-z0-9][A-Za-z0-9_-]*(\\[A-Za-z0-9][A-Za-z0-9_-]*)*$')][string]$Folder='dsh-superagent',
  [string]$Distribution='Ubuntu-24.04',
  [switch]$VerifyOnly
 )
